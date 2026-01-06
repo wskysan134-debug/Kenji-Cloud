@@ -72,24 +72,27 @@ module.exports = {
             for (const cat of Object.values(categories)) totalCommands += cat.size;
 
             let helpMessage = '';
-            helpMessage += `╔═══════ ★ ${botName.toUpperCase()} ★ ═══════╗\n\n`;
+            helpMessage += `╔════ ★ ${botName.toUpperCase()} ★ ══╗\n\n`;
             helpMessage += `👑 المطوّر : ${ownerName}\n`;
             helpMessage += `⚙️ عدد الأوامر : ${totalCommands}\n\n`;
 
             for (const [category, cmdsMap] of Object.entries(categories)) {
                 const cmds = Array.from(cmdsMap.values());
-                helpMessage += `━━━━━━━━━━━ ✦ ${category.toUpperCase()} ✦ ━━━━━━━━━━━\n`;
+                helpMessage += `━━━━ ✦ ${category.toUpperCase()} ✦ ━━━━\n`;
 
+                // ======== الشكل الجديد: كل الأوامر أفقي متلاصق ========
                 let line = '';
-                cmds.forEach((command, idx) => {
-                    line += `• ${command.name}   `;
-                    if ((idx + 1) % 4 === 0) line += '\n';
+                cmds.forEach((command) => {
+                    const shortName = command.name.length > 20
+                        ? command.name.slice(0, 20) + '…'
+                        : command.name;
+                    line += `▢ ${shortName}`;
                 });
 
                 helpMessage += line + '\n\n';
             }
 
-            helpMessage += `╚══════════════════════════════════╝\n`;
+            helpMessage += `╚════════════════════╝\n`;
             helpMessage += `💡 اكتب: ${config.prefix}اوامر <اسم الأمر> لعرض التفاصيل`;
 
             // ===== إرسال الصورة مع الرسالة =====
