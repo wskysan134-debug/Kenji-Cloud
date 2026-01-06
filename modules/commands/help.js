@@ -16,7 +16,7 @@ function readDB(filePath) {
 
 module.exports = {
     config: {
-        name: 'help',
+        name: 'اوامر',
         version: '1.0',
         author: 'Hridoy',
         countDown: 5,
