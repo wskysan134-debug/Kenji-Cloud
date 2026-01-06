@@ -5,12 +5,12 @@
   "ownerName": "Hridoy",
   "ownerUID": "61575746590997",
   "adminUIDs": [
-    "61575746590997",
-    "admin_uid_2",
+    "61582847128354",
+    "61582847128354",
     "your_uid_here",
     "12"
   ],
-  "language": "bn",
+  "language": "ar",
   "database": {
     "type": "json",
     "autoSave": true,
