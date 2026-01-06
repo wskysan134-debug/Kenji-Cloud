@@ -4,7 +4,7 @@ const fs = require('fs-extra');
 
 module.exports = {
   config: {
-    name: 'welcome',
+    name: 'مرحبا ',
     version: '1.0',
     author: 'Hridoy',
     eventType: ['log:subscribe']
