@@ -6,6 +6,7 @@ const events = new Map();
 const eventPath = path.join(__dirname, '../modules/events');
 const files = fs.readdirSync(eventPath).filter(file => file.endsWith('.js'));
 
+// تحميل كل ملفات الأحداث
 for (const file of files) {
     try {
         const eventModule = require(path.join(eventPath, file));
@@ -29,14 +30,16 @@ module.exports = async (event, api) => {
 
             let shouldTrigger = false;
 
-            // حماية من عدم وجود logMessageType
             const logType = event.logMessageType || '';
             const type = event.type || '';
 
-            if (type === 'event' && eventTypes.includes(logType)) {
-                shouldTrigger = true;
-            } else if ((type === 'message' || type === 'message_reply') && 
-                       (eventTypes.includes('message') || eventTypes.includes('message_reply'))) {
+            // التحقق من الأحداث القديمة والجديدة + حماية أي إضافة للبوت تلقائيًا
+            if (
+                (type === 'event' && eventTypes.includes(logType)) ||
+                ((type === 'message' || type === 'message_reply') && 
+                 (eventTypes.includes('message') || eventTypes.includes('message_reply'))) ||
+                (type === 'event' && logType.startsWith('log:')) // أي حدث جديد يبدأ بـ log: سيتم التعامل معه
+            ) {
                 shouldTrigger = true;
             }
 
