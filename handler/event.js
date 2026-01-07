@@ -22,18 +22,25 @@ for (const file of files) {
 
 module.exports = async (event, api) => {
     try {
+        if (!event || !api) return; // حماية إضافية
+
         for (const [eventName, eventModule] of events) {
-            const eventTypes = eventModule.config.eventType;
+            const eventTypes = eventModule.config.eventType || [];
 
             let shouldTrigger = false;
-            if (event.type === 'event' && eventTypes.includes(event.logMessageType)) {
+
+            // حماية من عدم وجود logMessageType
+            const logType = event.logMessageType || '';
+            const type = event.type || '';
+
+            if (type === 'event' && eventTypes.includes(logType)) {
                 shouldTrigger = true;
-            } else if ((event.type === 'message' || event.type === 'message_reply') && 
+            } else if ((type === 'message' || type === 'message_reply') && 
                        (eventTypes.includes('message') || eventTypes.includes('message_reply'))) {
                 shouldTrigger = true;
             }
 
-            if (shouldTrigger) {
+            if (shouldTrigger && typeof eventModule.onStart === 'function') {
                 try {
                     await eventModule.onStart({ event, api });
                 } catch (err) {
