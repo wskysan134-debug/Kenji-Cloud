@@ -8,31 +8,31 @@ const RESTART_DELAY = 5000;
 
 function startBot() {
   if (botProcess) {
-    log('info', 'Stopping existing bot process...');
+    log('info', 'إيقاف عملية البوت الحالية...');
     botProcess.kill(); 
   }
 
-  log('info', 'Starting bot...');
+  log('info', 'تشغيل البوت...');
   botProcess = spawn('node', ['main.js'], { stdio: 'inherit' });
 
   botProcess.on('close', (code) => {
-    log('info', `Bot process exited with code ${code}`);
+    log('info', `انتهت عملية البوت برمز الخروج ${code}`);
     if (code === 2) { 
-      log('info', 'Bot is restarting...');
+      log('info', 'يتم إعادة تشغيل البوت...');
       setTimeout(startBot, RESTART_DELAY);
     } else if (code !== 0 && restartCount < MAX_RESTARTS) { 
       restartCount++;
-      log('warn', `Restarting bot in ${RESTART_DELAY / 1000} seconds... (Attempt ${restartCount}/${MAX_RESTARTS})`);
+      log('warn', `إعادة تشغيل البوت بعد ${RESTART_DELAY / 1000} ثوانٍ... (محاولة ${restartCount}/${MAX_RESTARTS})`);
       setTimeout(startBot, RESTART_DELAY);
     } else if (restartCount >= MAX_RESTARTS) {
-      log('error', `Bot stopped after ${MAX_RESTARTS} restarts. Please check for errors.`);
+      log('error', `توقف البوت بعد ${MAX_RESTARTS} محاولات إعادة تشغيل. يرجى التحقق من الأخطاء.`);
     } else {
-      log('info', 'Bot exited normally.');
+      log('info', 'انتهت عملية البوت بشكل طبيعي.');
     }
   });
 
   botProcess.on('error', (err) => {
-    log('error', `Failed to start bot process: ${err.message}`);
+    log('error', `فشل في تشغيل عملية البوت: ${err.message}`);
   });
 }
 
@@ -40,7 +40,7 @@ function startBot() {
 startBot();
 
 process.on('SIGINT', () => {
-  log('info', 'Ctrl+C detected. Stopping bot...');
+  log('info', 'تم اكتشاف Ctrl+C. جاري إيقاف البوت...');
   if (botProcess) {
     botProcess.kill();
   }
