@@ -23,7 +23,7 @@ for (const file of files) {
 
 module.exports = async (event, api) => {
     try {
-        if (!event || !api) return; // حماية إضافية
+        if (!event || !api) return;
 
         for (const [eventName, eventModule] of events) {
             const eventTypes = eventModule.config.eventType || [];
@@ -33,12 +33,11 @@ module.exports = async (event, api) => {
             const logType = event.logMessageType || '';
             const type = event.type || '';
 
-            // التحقق من الأحداث القديمة والجديدة + حماية أي إضافة للبوت تلقائيًا
+            // التحقق من الأحداث بدقة أكبر
             if (
-                (type === 'event' && eventTypes.includes(logType)) ||
+                (type === 'event' && (eventTypes.includes(logType) || logType.startsWith('log:'))) ||
                 ((type === 'message' || type === 'message_reply') && 
-                 (eventTypes.includes('message') || eventTypes.includes('message_reply'))) ||
-                (type === 'event' && logType.startsWith('log:')) // أي حدث جديد يبدأ بـ log: سيتم التعامل معه
+                 (eventTypes.includes('message') || eventTypes.includes('message_reply')))
             ) {
                 shouldTrigger = true;
             }
