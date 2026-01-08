@@ -2,13 +2,18 @@ const { handleCommand } = require('./command');
 const { Users, Threads } = require('../database/database');
 const config = require('../config/config.json');
 const { log } = require('../logger/logger');
+const fs = require('fs-extra');
+const path = require('path');
+
+const normalizeCommandName = (s) => {
+  if (!s) return s;
+  return s.trim().toLowerCase().replace(/\s+/g, '_').replace(/–|—|‑/g, '-');
+};
 
 const handleMessage = async (event, api, commands) => {
   try {
-    // السماح بالرسائل أو الردود أو الأحداث (مثل إضافة عضو)
     if (!['message', 'message_reply', 'event'].includes(event.type)) return;
 
-    // جلب معلومات المستخدم والقروب بحذر
     let userInfo = {};
     let threadInfo = {};
     try {
@@ -21,42 +26,36 @@ const handleMessage = async (event, api, commands) => {
     const userName = userInfo[event.senderID]?.name || 'مستخدم غير معروف';
     const threadName = threadInfo?.name || 'مجموعة غير معروفة';
 
-    // حفظ المستخدم والقروب في قاعدة البيانات
     if (event.senderID) Users.create(event.senderID, userName);
     if (event.threadID) Threads.create(event.threadID, threadName);
 
     const userData = event.senderID ? Users.get(event.senderID) : {};
     const threadData = event.threadID ? Threads.get(event.threadID) : {};
 
-    // تحديث بيانات المستخدم
     if (event.senderID) {
-      userData.name = userName; 
+      userData.name = userName;
       userData.messageCount = (userData.messageCount || 0) + 1;
       userData.lastActive = new Date().toISOString();
 
-      // حساب XP وترقية الرتبة
       const xpToGive = Math.floor(Math.random() * 10) + 5;
       userData.xp = (userData.xp || 0) + xpToGive;
       userData.totalxp = (userData.totalxp || 0) + xpToGive;
-      const requiredXp = 5 * Math.pow(userData.rank + 1, 2);
+      const requiredXp = 5 * Math.pow((userData.rank || 0) + 1, 2);
       if (userData.xp >= requiredXp) {
-        userData.rank++;
+        userData.rank = (userData.rank || 0) + 1;
         userData.xp -= requiredXp;
       }
       Users.set(event.senderID, userData);
     }
 
-    // تحديث بيانات القروب
     if (event.threadID) {
-      threadData.name = threadName; 
+      threadData.name = threadName;
       Threads.set(event.threadID, threadData);
     }
 
-    // تجهيز معلومات الرسالة
     const body = event.body || '';
     const isGroup = event.isGroup || false;
     const messageType = event.attachments && event.attachments.length > 0 ? 'وسائط' : 'نص';
-    // إذا مافي attachment، نجلب صورة المستخدم مباشرة
     let mediaUrl = 'غير متوفر';
     if (event.attachments && event.attachments.length > 0) {
       mediaUrl = event.attachments[0].url || 'غير متوفر';
@@ -68,7 +67,6 @@ const handleMessage = async (event, api, commands) => {
     const logMessage = `${time} - ${userName} (${isGroup ? 'مجموعة' : 'خاص'}) - النوع: ${messageType} - الرسالة: ${body} - رابط الوسائط: ${mediaUrl}`;
     log('info', logMessage);
 
-    // معالجة الردود على الرسائل
     if (event.messageReply && global.client?.handleReply) {
       const { handleReply } = global.client;
       const reply = handleReply.find(r => r.messageID === event.messageReply.messageID);
@@ -80,13 +78,13 @@ const handleMessage = async (event, api, commands) => {
       }
     }
 
-    // البادئة
     const currentPrefix = threadData?.settings?.prefix || config.prefix;
-    const commandName = body.split(' ')[0].toLowerCase();
-    const commandsList = global.client.commands; 
+    const commandsList = global.client.commands;
 
-    // تنفيذ أوامر بدون البادئة
-    const noPrefixCommand = commandsList.get(commandName) || Array.from(commandsList.values()).find(cmd => cmd.config.aliases?.includes(commandName));
+    // أوامر بدون بادئة
+    const commandToken = body.split(' ')[0] || '';
+    const normalizedToken = normalizeCommandName(commandToken.toLowerCase());
+    const noPrefixCommand = commandsList.get(normalizedToken) || Array.from(commandsList.values()).find(cmd => cmd.config.aliases?.map(a => normalizeCommandName(a.toLowerCase())).includes(normalizedToken));
     if (noPrefixCommand && noPrefixCommand.config.prefix === false) {
       const args = body.trim().split(/\s+/);
       if (args.length === 0) return;
@@ -94,10 +92,11 @@ const handleMessage = async (event, api, commands) => {
       return;
     }
 
-    // تنفيذ أوامر بالبادئة
+    // أوامر بالبادئة
     if (body.startsWith(currentPrefix)) {
       const args = body.slice(currentPrefix.length).trim().split(/\s+/);
       if (args.length === 0) return;
+      // طبعًا handleCommand سيبحث في الخريطة (وتوجد المفاتيح العربية هناك)
       await handleCommand({ message: body, args, event, api, Users, Threads, commands: commandsList, config: global.client.config });
     }
   } catch (error) {

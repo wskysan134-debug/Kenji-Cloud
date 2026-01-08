@@ -2,15 +2,16 @@ const axios = require('axios');
 
 module.exports = {
     config: {
-        name: 'gpt4',
+        name: 'الذكاء_الاصطناعي',
         version: '1.0',
         author: 'Hridoy',
         countDown: 5,
         prefix: true,
         groupAdminOnly: false,
-        description: 'Chat with GPT-4 AI.',
+        description: 'التحدث مع نموذج GPT-4 الذكي.',
         category: 'ai',
         guide: {
+            ar: '   {pn}الذكاء_الاصطناعي <سؤال>',
             en: '   {pn}gpt4 <query>'
         },
     },
@@ -20,7 +21,7 @@ module.exports = {
 
         const query = args.join(' ').trim();
         if (!query) {
-            return api.sendMessage('❌ Please provide a query. Example: !gpt4 Tell me a fact', threadID, messageID);
+            return api.sendMessage('❌ الرجاء كتابة سؤال. مثال: !الذكاء_الاصطناعي ما هي عاصمة فرنسا؟', threadID, messageID);
         }
 
         try {
@@ -33,13 +34,14 @@ module.exports = {
             console.log('GPT-4 response:', response.data);
 
             if (response.data.status && response.data.result) {
-                api.sendMessage(response.data.result, threadID, messageID);
+                // إذا كان الرد طويلًا يمكن تقسيمه أو إرساله كما هو
+                await api.sendMessage(response.data.result, threadID, messageID);
             } else {
-                throw new Error('Invalid response from GPT-4 API');
+                api.sendMessage('⚠️ استجابة غير صالحة من واجهة GPT-4.', threadID, messageID);
             }
         } catch (error) {
             console.error('GPT-4 error:', error.message);
-            api.sendMessage(`❌ Error: ${error.message}`, threadID, messageID);
+            api.sendMessage(`❌ حدث خطأ أثناء الاتصال بواجهة GPT-4: ${error.message}`, threadID, messageID);
         }
     },
 };
